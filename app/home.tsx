@@ -1,17 +1,25 @@
 import { useRouter } from "expo-router"
 import { UseAuth } from "../context/AuthContext"
 import { useEffect } from "react"
-import { Button, Text, View, StyleSheet } from "react-native"
+import { Button, Text, View, StyleSheet, ActivityIndicator } from "react-native"
 
 export default function HomeScreen() {
-    const { user, logout } = UseAuth()
+    const { user, logout, loading } = UseAuth()
     const router = useRouter()
 
     useEffect(() => {
-        if (!user) {
+        if (!loading && !user) {
             router.replace("/login")
         }
-    }, [user])
+    }, [user, loading])
+
+    if (loading) {
+        return (
+            <View style={styles.container}>
+                <ActivityIndicator size="large" color="#1e40e8ff" />
+            </View>
+        )
+    }
 
     return (
         <View style={styles.container}>
@@ -38,6 +46,7 @@ export default function HomeScreen() {
         </View>
     )
 }
+
 
 const styles = StyleSheet.create({
     container: {

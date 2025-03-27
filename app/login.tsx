@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router"
 import { UseAuth } from "../context/AuthContext"
 import { useState } from "react"
-import { Button, StyleSheet, Text, TextInput, View } from "react-native"
+import { Button, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
 
 export default function LoginScreen() {
     const { login } = UseAuth()
@@ -30,10 +30,10 @@ export default function LoginScreen() {
     }
 
     return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor:"#151517ff" }}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: "#151517ff" }}>
             <View style={style.body}>
                 <View style={style.containerLogin}>
-                    <Text style={style.login_title}>Login</Text>
+                    <Text style={style.login_title}>Iniciar sesión</Text>
                     <Text style={style.login_title}>Bienvenido!</Text>
 
                     {errorMessage !== "" && (
@@ -41,28 +41,40 @@ export default function LoginScreen() {
                     )}
 
                     <View style={style.login_inputs_container}>
-                        <TextInput
-                            style={style.login_inputs_input}
-                            keyboardType="email-address"
-                            placeholder="Ingresa tu correo"
-                            value={email}
-                            placeholderTextColor={"gray"}
-                            onChangeText={setEmail}
-                        />
-                        <TextInput
-                            style={style.login_inputs_input}
-                            placeholder="Ingresa tu contraseña"
-                            value={password}
-                            placeholderTextColor={"gray"}
-                            onChangeText={setPassword}
-                            secureTextEntry
-                        />
+                        <View>
+                            <Text>Correo electronico</Text>
+                            <TextInput
+                                style={style.login_inputs_input}
+                                keyboardType="email-address"
+                                placeholder="Ingresa tu correo"
+                                value={email}
+                                placeholderTextColor={"gray"}
+                                onChangeText={setEmail}
+                            />
+                        </View>
+
+                        <View>
+                            <Text>Contraseña</Text>
+                            <TextInput
+                                style={style.login_inputs_input}
+                                placeholder="Ingresa tu contraseña"
+                                value={password}
+                                placeholderTextColor={"gray"}
+                                onChangeText={setPassword}
+                                secureTextEntry
+                            />
+                        </View>
+
                     </View>
 
                     <View style={style.login_buttons_container}>
-                        <Button color={"#1e40e8ff"} title="Iniciar sesión" onPress={handleLogin} />
-                        <Text>ó</Text>
-                        <Button color={"#c91eb3ff"} title="Registrarse como nuevo usuario" onPress={() => router.push("/register")} />
+                        <Button color={"#c91eb3ff"} title="Iniciar sesión" onPress={handleLogin} />
+                        <View style={{ display: "flex", flexDirection: "row", gap: 10, marginTop: 15 }}>
+                            <Text>¿Ya tienes una cuenta?</Text>
+                            <TouchableOpacity onPress={() => router.replace("/register")}>
+                                <Text style={{ textDecorationLine: "underline", color: "blue", fontWeight: "bold" }}>Registrarse</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </View>
@@ -85,8 +97,9 @@ const style = StyleSheet.create({
         width: '80%'
     },
     login_title: {
-        fontSize: 20,
-        marginBottom: 10
+        fontSize: 30,
+        marginBottom: 10,
+        alignSelf: "center"
     },
     login_inputs_container: {
         display: "flex",

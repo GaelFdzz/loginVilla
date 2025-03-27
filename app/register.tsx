@@ -10,7 +10,8 @@ export default function Register() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [nombre, setNombre] = useState("")
-    const [fotoPerfil, setFotoPerfil] = useState("")
+    const [twitterUser, setTwitterUser] = useState("") // 👉 Nuevo estado para el usuario de Twitter
+    const [fotoPerfil, setFotoPerfil] = useState("https://unavatar.io/x/") // 👉 URL base
     const [biografia, setBiografia] = useState("")
     const [telefono, setTelefono] = useState("")
     const [idioma, setIdioma] = useState("")
@@ -48,6 +49,12 @@ export default function Register() {
         }
     }
 
+    // Actualiza la URL de la foto de perfil dinámicamente
+    const handleTwitterUserChange = (value: string) => {
+        setTwitterUser(value)
+        setFotoPerfil(`https://unavatar.io/${value}`)
+    }
+
     return (
         <ScrollView style={{padding: 20, backgroundColor: "#151517ff" }}>
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}>
@@ -75,8 +82,8 @@ export default function Register() {
                                 <TextInput style={style.login_inputs_input} placeholder="Ingresa tu nombre" value={nombre} placeholderTextColor={"gray"} onChangeText={setNombre} />
                             </View>
                             <View>
-                                <Text>Foto de Perfil</Text>
-                                <TextInput style={style.login_inputs_input} placeholder="Ingresa tu foto de perfil" value={fotoPerfil} placeholderTextColor={"gray"} onChangeText={setFotoPerfil} />
+                                <Text>Foto de perfil usando tu usuario de Twitter</Text>
+                                <TextInput style={style.login_inputs_input} placeholder="Ingresa tu usuario de Twitter" value={twitterUser} placeholderTextColor={"gray"} onChangeText={handleTwitterUserChange} />
                             </View>
                             <View>
                                 <Text>Biografía</Text>

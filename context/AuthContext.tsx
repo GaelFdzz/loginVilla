@@ -4,34 +4,35 @@ import {
     useState,
     ReactNode,
     useEffect,
-} from "react"
+} from "react";
 import {
     createUserWithEmailAndPassword,
     onAuthStateChanged,
     signInWithEmailAndPassword,
     signOut,
     User as FirebaseUser,
-} from "firebase/auth"
-import { doc, setDoc, getDoc } from "firebase/firestore"
-import { auth, db } from "../firebaseConfig"
+} from "firebase/auth";
+import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import { auth, db } from "../firebaseConfig";
 
 // INTERFAZ PARA EL USUARIO
 interface Usuario {
-    uid: string
-    email: string
-    name: string
-    fotoPerfil: string
-    biografia: string
-    telefono: string
-    idioma: string
-    favoritos: string[]
+    uid: string;
+    email: string;
+    name: string;
+    fotoPerfil: string;
+    biografia: string;
+    telefono: string;
+    idioma: string;
+    favoritos: string[];
+    creadoEn: string;
 }
 
 // INTERFAZ PARA EL CONTEXTO
 interface AuthContextType {
-    user: Usuario | null
-    login: (email: string, password: string) => Promise<boolean>
-    logout: () => void
+    user: Usuario | null;
+    login: (email: string, password: string) => Promise<boolean>;
+    logout: () => void;
     register: (
         email: string,
         password: string,
@@ -40,30 +41,31 @@ interface AuthContextType {
         biografia: string,
         telefono: string,
         idioma: string
-    ) => Promise<boolean>
-    loading: boolean
+    ) => Promise<boolean>;
+    updateUser: (updatedData: Partial<Usuario>) => Promise<boolean>;
+    loading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null)
+const AuthContext = createContext<AuthContextType | null>(null);
 
 // PROVEEDOR
 interface AuthProviderProps {
-    children: ReactNode
+    children: ReactNode;
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-    const [user, setUser] = useState<Usuario | null>(null)
-    const [loading, setLoading] = useState(true)
+    const [user, setUser] = useState<Usuario | null>(null);
+    const [loading, setLoading] = useState(true);
 
     // Verifica el estado de autenticación
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
-                const docRef = doc(db, "users", firebaseUser.uid)
-                const docSnap = await getDoc(docRef)
+                const docRef = doc(db, "users", firebaseUser.uid);
+                const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
-                    const data = docSnap.data()
+                    const data = docSnap.data();
                     setUser({
                         uid: firebaseUser.uid,
                         email: firebaseUser.email || "",
@@ -72,29 +74,47 @@ export function AuthProvider({ children }: AuthProviderProps) {
                         biografia: data.biografia,
                         telefono: data.telefono,
                         idioma: data.idioma,
+                        creadoEn: data.creadoEn,
                         favoritos: data.favoritos || [],
-                    })
+                    });
                 }
             } else {
-                setUser(null)
+                setUser(null);
             }
 
-            setLoading(false)
-        })
+            setLoading(false);
+        });
 
-        return () => unsubscribe()
-    }, [])
+        return () => unsubscribe();
+    }, []);
+
+    // ACTUALIZAR PERFIL
+    const updateUser = async (updatedData: Partial<Usuario>) => {
+        if (!user) return false;
+
+        try {
+            const userRef = doc(db, "users", user.uid);
+            await updateDoc(userRef, updatedData);
+
+            setUser((prevUser) => (prevUser ? { ...prevUser, ...updatedData } : null));
+
+            return true;
+        } catch (error) {
+            console.log("Error al actualizar el perfil:", error);
+            return false;
+        }
+    };
 
     // LOGIN
     const login = async (email: string, password: string) => {
         try {
-            await signInWithEmailAndPassword(auth, email, password)
-            return true
+            await signInWithEmailAndPassword(auth, email, password);
+            return true;
         } catch (error) {
-            console.log("Error al iniciar sesión", error)
-            return false
+            console.log("Error al iniciar sesión", error);
+            return false;
         }
-    }
+    };
 
     // REGISTRO
     const register = async (
@@ -107,12 +127,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         idioma: string
     ) => {
         try {
-            const userCredential = await createUserWithEmailAndPassword(
-                auth,
-                email,
-                password
-            )
-            const user = userCredential.user
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
 
             await setDoc(doc(db, "users", user.uid), {
                 email,
@@ -123,34 +139,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 telefono,
                 idioma,
                 favoritos: [],
-            })
+            });
 
-            console.log("Usuario registrado exitosamente")
-            return true
+            console.log("Usuario registrado exitosamente");
+            return true;
         } catch (error) {
-            console.log("Error al registrarse:", error)
-            return false
+            console.log("Error al registrarse:", error);
+            return false;
         }
-    }
+    };
 
     // LOGOUT
     const logout = async () => {
-        await signOut(auth)
-        setUser(null)
-    }
+        await signOut(auth);
+        setUser(null);
+    };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, updateUser, loading }}>
             {children}
         </AuthContext.Provider>
-    )
+    );
 }
 
 // HOOK PARA USAR EL CONTEXTO
 export function UseAuth() {
-    const context = useContext(AuthContext)
+    const context = useContext(AuthContext);
     if (!context) {
-        throw new Error("UseAuth debe estar dentro de un AuthProvider")
+        throw new Error("UseAuth debe estar dentro de un AuthProvider");
     }
-    return context
+    return context;
 }
