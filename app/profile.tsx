@@ -1,28 +1,44 @@
 import { useRouter } from "expo-router";
 import { UseAuth } from "../context/AuthContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
     Button, Text, View, Image,
-    StyleSheet, ActivityIndicator, ScrollView
+    StyleSheet, ActivityIndicator, ScrollView, TextInput, TouchableOpacity
 } from "react-native";
 
 export default function ProfileScreen() {
-    const { user, loading } = UseAuth();
+    const { user, loading, toggleFavorito } = UseAuth(); // Asegúrate de que toggleFavorito está en el contexto
     const router = useRouter();
+    const [nuevoFavorito, setNuevoFavorito] = useState(""); // Estado para el nuevo favorito
+    const [showInput, setShowInput] = useState(false); // Estado para mostrar el formulario
 
     useEffect(() => {
         if (!loading && !user) {
-            router.replace("/login")
+            router.replace("/login");
         }
-    }, [user, loading])
+    }, [user, loading]);
 
     if (loading) {
         return (
             <View style={styles.container}>
                 <ActivityIndicator size="large" color="#1e40e8ff" />
             </View>
-        )
+        );
     }
+
+    const handleToggleFavorito = (productoId: string) => {
+        toggleFavorito(productoId);
+    };
+
+    const handleAgregarFavorito = () => {
+        if (nuevoFavorito.trim() !== "") {
+            toggleFavorito(nuevoFavorito); // Agregar el nuevo favorito
+            setNuevoFavorito(""); // Limpiar el campo de texto después de agregarlo
+            setShowInput(false); // Ocultar el formulario después de agregar el producto
+        } else {
+            alert("Por favor ingresa el nombre del producto favorito.");
+        }
+    };
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
@@ -40,20 +56,42 @@ export default function ProfileScreen() {
 
                     <Text style={styles.label}>📝 Biografía:</Text>
                     <Text style={styles.value}>{user?.biografia}</Text>
-
                 </View>
 
                 {/* Lista de Favoritos */}
                 <View style={styles.favoritosSection}>
-                    <Text style={styles.label}>⭐ Productos Favoritos:</Text>
+                    <Text style={styles.label}>
+                        ⭐ Productos Favoritos:
+                        <TouchableOpacity onPress={() => setShowInput(!showInput)}>
+                            <Text style={styles.addButtonText}>+</Text>
+                        </TouchableOpacity>
+                    </Text>
                     {user?.favoritos?.length ? (
-                        user?.favoritos.map((producto: any) => (
-                            <View key={producto.id} style={styles.favoritoItem}>
-                                <Text style={styles.favoritoNombre}>❤ {producto}</Text>
+                        user?.favoritos.map((productoId: string) => (
+                            <View key={productoId} style={styles.favoritoItem}>
+                                <Text style={styles.favoritoNombre}>❤ {productoId}</Text>
+                                <TouchableOpacity onPress={() => handleToggleFavorito(productoId)}>
+                                    <Text style={{ color: "gray", marginLeft: 10 }}>Eliminar</Text>
+                                </TouchableOpacity>
                             </View>
                         ))
                     ) : (
                         <Text style={styles.value}>No tienes productos favoritos aún.</Text>
+                    )}
+
+                    {/* Mostrar el formulario si showInput es true */}
+                    {showInput && (
+                        <View style={styles.inputContainer}>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Ingresa el nombre del nuevo producto"
+                                value={nuevoFavorito}
+                                onChangeText={setNuevoFavorito}
+                            />
+                            <TouchableOpacity onPress={handleAgregarFavorito} style={styles.addFavoritoButton}>
+                                <Text style={styles.addFavoritoButtonText}>+</Text>
+                            </TouchableOpacity>
+                        </View>
                     )}
                 </View>
 
@@ -64,8 +102,9 @@ export default function ProfileScreen() {
                     <Button color={"#999696ff"} title="Editar perfil" onPress={() => router.push("/editarPerfil")} />
                 </View>
 
-                <Text style={{ color: "gray", marginTop: 20 }}>Registrado el {user?.creadoEn ? new Date(user.creadoEn).toLocaleDateString() : "Fecha no disponible"}</Text>
-
+                <Text style={{ color: "gray", marginTop: 20 }}>
+                    Registrado el {user?.creadoEn ? new Date(user.creadoEn).toLocaleDateString() : "Fecha no disponible"}
+                </Text>
             </View>
         </ScrollView>
     );
@@ -117,6 +156,8 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         marginTop: 10,
         color: "#555",
+        flexDirection: "row",
+        alignItems: "center",
     },
     value: {
         fontSize: 16,
@@ -135,15 +176,40 @@ const styles = StyleSheet.create({
         alignItems: "center",
         marginVertical: 5,
     },
-    favoritoImage: {
-        width: 40,
-        height: 40,
-        borderRadius: 5,
-        marginRight: 10,
-        backgroundColor: "#ccc",
-    },
     favoritoNombre: {
         fontSize: 16,
-        color: "gray",
+        color: "red",
+    },
+    addButtonText: {
+        color: "green",
+        fontSize: 20,
+        fontWeight: "bold",
+        textAlign: "center",
+        margin: 10,
+        padding: 5
+    },
+    inputContainer: {
+        marginTop: 15,
+        width: "100%",
+        alignItems: "center",
+        flexDirection: "row", // Alineación en fila
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 8,
+        padding: 10,
+        width: "80%",
+    },
+    addFavoritoButton: {
+        backgroundColor: "transparent", // Sin fondo
+        color: "green", // Color verde
+        marginLeft: 10, // Espacio entre el campo de texto y el botón
+        padding: 5,
+    },
+    addFavoritoButtonText: {
+        color: "green", // Color verde
+        fontSize: 20,
+        fontWeight: "bold",
     },
 });

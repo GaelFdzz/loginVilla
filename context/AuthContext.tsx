@@ -1,3 +1,4 @@
+// AuthContext.tsx
 import {
     createContext,
     useContext,
@@ -10,7 +11,6 @@ import {
     onAuthStateChanged,
     signInWithEmailAndPassword,
     signOut,
-    User as FirebaseUser,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
@@ -43,12 +43,13 @@ interface AuthContextType {
         idioma: string
     ) => Promise<boolean>;
     updateUser: (updatedData: Partial<Usuario>) => Promise<boolean>;
+    toggleFavorito: (productoId: string) => Promise<void>;
+    esFavorito: (productoId: string) => boolean;
     loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// PROVEEDOR
 interface AuthProviderProps {
     children: ReactNode;
 }
@@ -57,7 +58,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const [user, setUser] = useState<Usuario | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Verifica el estado de autenticación
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
@@ -88,16 +88,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return () => unsubscribe();
     }, []);
 
-    // ACTUALIZAR PERFIL
     const updateUser = async (updatedData: Partial<Usuario>) => {
         if (!user) return false;
 
         try {
             const userRef = doc(db, "users", user.uid);
             await updateDoc(userRef, updatedData);
-
             setUser((prevUser) => (prevUser ? { ...prevUser, ...updatedData } : null));
-
             return true;
         } catch (error) {
             console.log("Error al actualizar el perfil:", error);
@@ -105,7 +102,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
     };
 
-    // LOGIN
     const login = async (email: string, password: string) => {
         try {
             await signInWithEmailAndPassword(auth, email, password);
@@ -116,7 +112,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
     };
 
-    // REGISTRO
     const register = async (
         email: string,
         password: string,
@@ -149,20 +144,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
     };
 
-    // LOGOUT
     const logout = async () => {
         await signOut(auth);
         setUser(null);
     };
 
+    const toggleFavorito = async (productoId: string) => {
+        if (!user) return;
+
+        const esFavorito = user.favoritos.includes(productoId);
+        const nuevosFavoritos = esFavorito
+            ? user.favoritos.filter((id) => id !== productoId)
+            : [...user.favoritos, productoId];
+
+        try {
+            const userRef = doc(db, "users", user.uid);
+            await updateDoc(userRef, { favoritos: nuevosFavoritos });
+            setUser((prev) => prev ? { ...prev, favoritos: nuevosFavoritos } : prev);
+        } catch (error) {
+            console.log("Error al actualizar favoritos:", error);
+        }
+    };
+
+    const esFavorito = (productoId: string): boolean => {
+        return !!user?.favoritos.includes(productoId);
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, updateUser, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, updateUser, toggleFavorito, esFavorito, loading }}>
             {children}
         </AuthContext.Provider>
     );
 }
 
-// HOOK PARA USAR EL CONTEXTO
 export function UseAuth() {
     const context = useContext(AuthContext);
     if (!context) {

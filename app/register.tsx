@@ -45,7 +45,7 @@ export default function Register() {
             setErrorMessage("") // borra cualquier error anterior
             router.replace("/login") // redirige a login
         } else {
-            setErrorMessage("No se pudo registrar el usuario")
+            setErrorMessage("No se pudo registrar el usuario. Usuario ya registrado.")
         }
     }
 
@@ -56,17 +56,13 @@ export default function Register() {
     }
 
     return (
-        <ScrollView style={{padding: 20, backgroundColor: "#151517ff" }}>
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <ScrollView style={{ padding: 20, backgroundColor: "#151517ff" }}>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
 
                 <View style={style.body}>
                     <View style={style.containerLogin}>
                         <Text style={style.login_title}>Registro de usuarios</Text>
-                        <Text style={style.login_title}>Bienvenido! {nombre}</Text>
-
-                        {errorMessage !== "" && (
-                            <Text style={style.errorText}>{errorMessage}</Text>
-                        )}
+                        <Text style={style.login_title}>¡Bienvenido! {nombre}</Text>
 
                         <View style={style.login_inputs_container}>
                             <View>
@@ -98,6 +94,10 @@ export default function Register() {
                                 <TextInput style={style.login_inputs_input} placeholder="Ingresa tu idioma" value={idioma} placeholderTextColor={"gray"} onChangeText={setIdioma} />
                             </View>
                         </View>
+
+                        {errorMessage !== "" && (
+                            <Text style={style.errorText}>{errorMessage}</Text>
+                        )}
 
                         <View style={style.login_buttons_container}>
                             <Button color={"#c91eb3ff"} title="Registrarse" onPress={handleRegister} />
